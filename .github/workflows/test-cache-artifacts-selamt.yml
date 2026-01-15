@@ -1,0 +1,45 @@
+name: Test Cache and Artifacts (1–N)
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "How many test entries (1–100)"
+        required: true
+        default: "10"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate input
+        run: |
+          if [ "${{ inputs.count }}" -lt 1 ] || [ "${{ inputs.count }}" -gt 100 ]; then
+            echo "Count must be between 1 and 100"
+            exit 1
+          fi
+
+      - name: Generate cache + artifact entries
+        run: |
+          for i in $(seq 1 ${{ inputs.count }}); do
+            mkdir -p .cache/test/$i artifacts/$i
+
+            head -c $((RANDOM % 50000 + 10000)) </dev/urandom > .cache/test/$i/cache.bin
+            echo "Entry $i" > artifacts/$i/info.txt
+            head -c 100000 </dev/urandom > artifacts/$i/artifact.bin
+
+            echo "Created entry $i"
+          done
+
+      - name: Save cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/test
+          key: test-cache-${{ github.run_id }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ github.run_id }}
+          path: artifacts
