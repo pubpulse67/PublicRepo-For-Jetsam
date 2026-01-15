@@ -1,0 +1,33 @@
+name: Test Cache and Artifacts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create random cache files
+        run: |
+          mkdir -p .cache/test
+          for i in {1..5}; do
+            head -c $((RANDOM % 50000 + 10000)) </dev/urandom > .cache/test/cache_$i.bin
+          done
+
+      - name: Save cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/test
+          key: test-cache-${{ github.run_id }}
+
+      - name: Create random artifact files
+        run: |
+          mkdir artifacts
+          echo "Run $GITHUB_RUN_ID" > artifacts/info.txt
+          head -c 150000 </dev/urandom > artifacts/random.bin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifact-${{ github.run_id }}
+          path: artifacts
