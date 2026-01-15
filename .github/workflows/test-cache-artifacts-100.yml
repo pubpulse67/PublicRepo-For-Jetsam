@@ -1,4 +1,4 @@
-name: Test Cache and Artifacts (1–100)
+name: Test Cache and Artifacts (100)
 
 on:
   workflow_dispatch:
